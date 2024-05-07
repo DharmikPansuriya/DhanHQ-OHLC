@@ -1,0 +1,31 @@
+version: '3'
+
+
+services:
+  backend:
+    container_name: x
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5005:5005"
+    environment:
+      PORT: 5005
+    env_file:
+      - .env
+    restart: always
+    labels:
+      - "traefik.enable=true"
+
+  traefik:
+    build:
+      context: ./traefik
+    volumes:
+      - production_traefik:/etc/traefik/acme:z
+    restart: always
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    command: "--configFile=/etc/traefik/traefik-prod.yml"
+volumes:
+  production_traefik: {}

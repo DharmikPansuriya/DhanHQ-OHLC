@@ -1,0 +1,29 @@
+name: Deploy to EC2 (x-x.ethan-ai.com)
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy in EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY  }}
+          HOSTNAME: ${{ secrets.EC2_HOST  }}
+          USER_NAME: ${{ secrets.EC2_USERNAME  }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
+            cd ethan-ai-x-x &&
+            git checkout production &&
+            git stash &&
+            git pull &&
+            git stash pop &&
+            (sudo ./auto_restart_service.sh > auto_restart_logger.txt 2>&1 &)
+          '

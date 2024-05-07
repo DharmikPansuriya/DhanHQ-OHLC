@@ -1,0 +1,44 @@
+log:
+  level: INFO
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+
+  websecure:
+    address: :443
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "avi@naamche.com"
+      storage: /etc/traefik/acme/acme.json
+      httpChallenge:
+        entryPoint: web
+
+http:
+  routers:
+    websecure-router:
+      rule: 'Host(`x-x.ethan-ai.com`)'
+      entryPoints:
+        - websecure
+      service: name_of_service
+      tls:
+        # https://docs.traefik.io/master/routing/routers/#certresolver
+        certResolver: letsencrypt
+
+  services:
+    name_of_service:
+      loadBalancer:
+        servers:
+          - url: http://backend:5005
+
+providers:
+  # https://docs.traefik.io/master/providers/file/
+  file:
+    filename:  /etc/traefik/traefik-dev.yml
+    watch: true
