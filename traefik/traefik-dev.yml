@@ -23,16 +23,16 @@ certificatesResolvers:
 http:
   routers:
     websecure-router:
-      rule: 'Host(`x-x.ethan-ai.com`)'
+      rule: "Host(`stock.hsdemo.co.in`)"
       entryPoints:
         - websecure
-      service: name_of_service
+      service: dhanhq_stocks
       tls:
         # https://docs.traefik.io/master/routing/routers/#certresolver
         certResolver: letsencrypt
 
   services:
-    name_of_service:
+    dhanhq_stocks:
       loadBalancer:
         servers:
           - url: http://backend:5005
@@ -40,5 +40,5 @@ http:
 providers:
   # https://docs.traefik.io/master/providers/file/
   file:
-    filename:  /etc/traefik/traefik-dev.yml
+    filename: /etc/traefik/traefik-dev.yml
     watch: true

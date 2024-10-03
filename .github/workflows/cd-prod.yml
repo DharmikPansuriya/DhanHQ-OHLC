@@ -1,4 +1,4 @@
-name: Deploy to EC2 (x-x.ethan-ai.com)
+name: Deploy to EC2
 
 on:
   push:
