@@ -1,5 +1,5 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11
-LABEL maintainer='avi@naamche.com'
+LABEL maintainer="Dharmik Pansuriya <service.dharmikpansuriya@gmail.com>"
 
 WORKDIR /app/
 

@@ -3,13 +3,9 @@ from config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from logging_config import config_logging
-
-config_logging()
-
 
 app = FastAPI(
-    title="Server API",
+    title="DhanHQ OHLC API",
     openapi_url=f"{settings.API_PATH}/openapi.json",
     docs_url=f"{settings.API_PATH}/docs",
     redoc_url=f"{settings.API_PATH}/redoc",

@@ -1,9 +1,8 @@
-version: '3'
-
+version: "3"
 
 services:
   backend:
-    container_name: x
+    container_name: dhanhq_ohlc_local
     build:
       context: ./backend
       dockerfile: Dockerfile
