@@ -26,6 +26,7 @@ class DhanHQClient:
             formatted_responses = {}
             for stock in securities:
                 response = self._fetch_and_format_price(stock)
+                response = self._get_time_and_close_prices(response)
                 formatted_responses[stock.security_id] = response
 
             return formatted_responses
@@ -92,3 +93,30 @@ class DhanHQClient:
             raise ValueError(f"Missing 'start_Time' in response data: {e}")
         except Exception as e:
             raise RuntimeError(f"Error formatting UNIX time to IST: {e}")
+
+    def _get_time_and_close_prices(self, stock_data):
+        """
+        Extract time and corresponding close prices from the stock data.
+        The input stock_data should contain 'start_Time' and 'close' lists.
+        Returns a dictionary where each timestamp maps to the close price.
+        """
+        try:
+            times = stock_data['data']['start_Time']
+            close_prices = stock_data['data']['close']
+
+            if not times or not close_prices:
+                raise ValueError(
+                    "Missing 'start_Time' or 'close' data in response.")
+
+            if len(times) != len(close_prices):
+                raise ValueError(
+                    "The lengths of 'start_Time' and 'close' do not match.")
+
+            # Create a dictionary of time -> close price
+            time_to_close_price = {time: close for time,
+                                   close in zip(times, close_prices)}
+            return time_to_close_price
+        except KeyError as e:
+            raise ValueError(f"Missing required data: {e}")
+        except Exception as e:
+            raise RuntimeError(f"Error processing time and close prices: {e}")
