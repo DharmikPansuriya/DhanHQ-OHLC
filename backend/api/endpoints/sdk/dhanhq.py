@@ -101,6 +101,7 @@ class DhanHQClient:
         Returns a dictionary where each timestamp maps to the close price.
         """
         try:
+            print(stock_data)
             times = stock_data['data']['start_Time']
             close_prices = stock_data['data']['close']
 
