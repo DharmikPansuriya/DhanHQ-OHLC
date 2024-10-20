@@ -19,9 +19,7 @@ class DhanHQClient:
         """
         try:
             if not isinstance(securities, list):
-                raise TypeError(
-                    "Input should be a list of dictionaries representing stocks."
-                )
+                return False
 
             formatted_responses = {}
             for stock in securities:
@@ -29,11 +27,11 @@ class DhanHQClient:
                 response = self._get_time_and_close_prices(response)
                 formatted_responses[stock.security_id] = response
 
+            print(f'formatted_responses {formatted_responses}')
+
             return formatted_responses
-        except TypeError as e:
-            raise e
         except Exception as e:
-            raise RuntimeError(f"Failed to fetch live price data: {e}")
+            return False
 
     def _fetch_and_format_price(self, stock):
         """
@@ -49,20 +47,64 @@ class DhanHQClient:
 
             # Ensure response is a dictionary
             if not isinstance(response, dict):
+                return False
+
+            # Check if 'data' is present and has 'start_Time'
+            if 'data' not in response or response['data'] == '':
+                return False
+
+            # Check if the response indicates failure
+            if response.get('status') == 'failure':
+                return False
+
+            # Proceed to format the timestamps
+            return self._format_time_from_unix_to_ist(response)
+        except Exception as e:
+            return False
+
+    def _fetch_and_format_close_price(self, stock):
+        """
+        Fetches the live price and formats the time for a single stock.
+        Handles the case when the market is closed or no data is available.
+        """
+        try:
+
+            # GET TODAT DATE
+            today = datetime.date.today()
+            print(f'today {today}')
+
+            # GET 10 DAYS BEFORE DATE
+            ten_days_before = today - datetime.timedelta(days=10)
+            print(f'ten_days_before {ten_days_before}')
+
+            print(f'stock {stock}')
+            response = self.dhan.historical_daily_data(
+                symbol=stock.symbol,
+                exchange_segment=stock.exchange_segment,
+                instrument_type=stock.instrument_type,
+                expiry_code=0,
+                from_date=str(ten_days_before),
+                to_date=str(today),
+            )
+
+            print(f'response000 {response}')
+
+            # Ensure response is a dictionary
+            if not isinstance(response, dict):
                 return {
                     'message': f"Unexpected response for {stock.security_id}: {response}"
+                }
+
+            # Check if 'data' is present and has 'start_Time'
+            if 'data' not in response or response['data'] == '':
+                return {
+                    'message': f"No data available for {stock.security_id}. Market might be closed or data not available."
                 }
 
             # Check if the response indicates failure
             if response.get('status') == 'failure':
                 return {
                     'message': f"Failed to fetch data for {stock.security_id}: {response['remarks']['message']}"
-                }
-
-            # Check if 'data' is present and has 'start_Time'
-            if 'data' not in response or not response['data'].get('start_Time'):
-                return {
-                    'message': f"No data available for {stock.security_id}. Market might be closed or data not available."
                 }
 
             # Proceed to format the timestamps
@@ -89,10 +131,8 @@ class DhanHQClient:
 
             response['data']['start_Time'] = ist_times
             return response
-        except KeyError as e:
-            raise ValueError(f"Missing 'start_Time' in response data: {e}")
         except Exception as e:
-            raise RuntimeError(f"Error formatting UNIX time to IST: {e}")
+            return False
 
     def _get_time_and_close_prices(self, stock_data):
         """
@@ -121,3 +161,30 @@ class DhanHQClient:
             raise ValueError(f"Missing required data: {e}")
         except Exception as e:
             raise RuntimeError(f"Error processing time and close prices: {e}")
+
+    def get_close_price(self, securities):
+        """
+        Fetch close prices for multiple stocks.
+        `securities` should be a list of dictionaries.
+        Each dictionary should have 'security_id', 'exchange_segment', and 'instrument_type'.
+        """
+        try:
+            if not isinstance(securities, list):
+                raise TypeError(
+                    "Input should be a list of dictionaries representing stocks."
+                )
+
+            formatted_responses = {}
+            for stock in securities:
+                response = self._fetch_and_format_close_price(stock)
+                print(f'response {response}')
+                response = self._get_time_and_close_prices(response)
+                formatted_responses[stock.security_id] = response
+
+            print(f'formatted_responses {formatted_responses}')
+
+            return formatted_responses
+        except TypeError as e:
+            raise e
+        except Exception as e:
+            raise RuntimeError(f"Failed to fetch live price data: {e}")

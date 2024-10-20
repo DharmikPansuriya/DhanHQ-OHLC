@@ -15,6 +15,7 @@ class Security(BaseModel):
     security_id: str
     exchange_segment: str
     instrument_type: str
+    symbol: str
 
 
 class SecuritiesPayload(BaseModel):
@@ -38,6 +39,13 @@ def get_stocks_data(payload: SecuritiesPayload):
 
         # Fetch live prices for multiple stocks
         multiple_stock_prices = dhan_client.get_live_price(multiple_stocks)
+        print(f'Multiple Stock Prices: {multiple_stock_prices}')
+        if not multiple_stock_prices:
+            response = dhan_client.get_close_price(multiple_stocks)
+            return {
+                "status": "success",
+                "data": response
+            }
 
         # Log the result for debugging purposes
         logging.info(f"Fetched Multiple Stock Prices: {multiple_stock_prices}")
@@ -50,7 +58,34 @@ def get_stocks_data(payload: SecuritiesPayload):
     except Exception as e:
         logging.error(f"Error fetching stock OHLC data: {str(e)}")
         raise HTTPException(
-            status_code=500, detail="Failed to fetch stock data")
+            status_code=500, detail=f"{str(e)}")
+
+
+@router.post("/get-stocks-close-price", tags=["Get Stocks Close Price"])
+def get_stocks_close_price(payload: SecuritiesPayload):
+    try:
+        # Initialize DhanHQ client
+        dhan_client = DhanHQClient(
+            settings.DHANHQ_CLIENT_ID, settings.DHANHQ_ACCESS_TOKEN)
+
+        # Extract the list of securities from the payload
+        multiple_stocks = payload.securities
+
+        # Fetch live prices for multiple stocks
+        multiple_stock_prices = dhan_client.get_close_price(multiple_stocks)
+
+        # Log the result for debugging purposes
+        logging.info(f"Fetched Multiple Stock Prices: {multiple_stock_prices}")
+
+        # Return stock prices in a structured format for the frontend
+        return {
+            "status": "success",
+            "data": multiple_stock_prices
+        }
+    except Exception as e:
+        logging.error(f"Error fetching stock OHLC data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"{str(e)}")
 
 
 # @router.post("/get-stocks-ohlc", tags=["Get Stocks OHLC"])
