@@ -123,10 +123,16 @@ class DhanHQClient:
         try:
             ist_times = []
             for timestamp in response['data']['start_Time']:
+                print("timestamp", timestamp)
                 timestamp = float(timestamp)
                 utc_time = datetime.datetime.utcfromtimestamp(timestamp)
                 ist_time = utc_time.replace(
                     tzinfo=pytz.utc).astimezone(self.ist)
+
+                # replace all the 2014 to 2024
+                ist_time = ist_time.replace(year=2024)
+                # do -1 in date
+                ist_time = ist_time - datetime.timedelta(days=1)
                 ist_times.append(ist_time.strftime('%Y-%m-%d %H:%M:%S %Z %z'))
 
             response['data']['start_Time'] = ist_times
